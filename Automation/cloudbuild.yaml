@@ -1,0 +1,25 @@
+# Build the docker image
+steps:
+  - name: "gcr.io/cloud-builders/docker"
+    args: ["build", "-t", "gcr.io/your-project-id/your-tag-backend", "./parent-folder/"]
+  # Push the container image to Container Registry
+  - name: "gcr.io/cloud-builders/docker"
+    args: ["push", "gcr.io/your-project-id/your-tag""]
+  # Deploy container image to Cloud Run
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: gcloud
+    args:
+      [
+        "run",
+        "deploy",
+        "backend",
+        "--image",
+        "your-project-id/your-tag"",
+        "--region",
+        "europe-west2",
+        "--allow-unauthenticated",
+        "--memory",
+        "2G"
+      ]
+images:
+  - gcr.io/your-project-id/your-tag"
