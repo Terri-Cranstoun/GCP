@@ -1,0 +1,47 @@
+# Stage 1: Build the React application
+FROM node:18 AS builder
+ 
+# Set working directory in the container
+WORKDIR /app
+ 
+# Copy package.json and yarn.lock files
+COPY package.json yarn.lock .npmrc ./
+ 
+# Pass NPM_TOKEN as a build argument
+ARG NPM_TOKEN
+ENV NPM_TOKEN=${NPM_TOKEN}
+
+ARG EMAIL
+ENV EMAIL=${EMAIL}
+# Create .npmrc file with the provided NPM_TOKEN
+ 
+# Install dependencies
+RUN yarn cache clean
+RUN yarn install
+ 
+# Copy the rest of your application code
+COPY . .
+ 
+# Build the application
+RUN yarn build
+ 
+# Remove .npmrc after installation to ensure it doesn't end up in the final image
+# RUN rm -f .npmrc
+ 
+# Stage 2: Serve the application using Nginx
+FROM --platform=linux/amd64 nginx:alpine
+
+ # Remove the default Nginx configuration file
+RUN rm /etc/nginx/conf.d/default.conf
+ 
+# Copy the custom Nginx configuration file
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+ 
+# Copy the build directory from the builder stage to the Nginx serve directory
+COPY --from=builder /app/build /usr/share/nginx/html
+ 
+# Expose port 80 to the Docker host, so we can access the container
+EXPOSE 80
+ENV PORT 80
+# Start Nginx and serve the application
+CMD ["nginx", "-g", "daemon off;"]
