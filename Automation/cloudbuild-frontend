@@ -1,0 +1,45 @@
+# Define substitutions for the image name (optional)
+substitutions:
+  _IMAGE_NAME: "your-project-id/your-tag-frontend"  # Replace with your desired image name (all lowercase)
+
+# Build the Docker image
+steps:
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      [
+        "build",
+        "-t",
+        "gcr.io/your-project-id/your-tag-frontend",  # Use IMAGE_NAME arg or default to _IMAGE_NAME (ensure lowercase)
+        "--build-arg",
+        "NPM_TOKEN=${NPM_TOKEN}",  # Replace with actual secret value (not recommended)
+        "./your-file-path/"
+      ]
+  # Push the container image to Container Registry
+  - name: "gcr.io/cloud-builders/docker"
+    args: ["push", "gcr.io/your-project-id/your-tag-frontend"]  # Use IMAGE_NAME arg or default to _IMAGE_NAME (ensure lowercase)
+
+  # Deploy container image to Cloud Run (assuming authentication is configured elsewhere)
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: gcloud
+    args:
+      [
+        "run",
+        "deploy",
+        "frontend",  
+        "--image",
+        "gcr.io/your-project-id/your-tag-frontend",  # Use IMAGE_NAME arg or default to _IMAGE_NAME (ensure lowercase)
+        "--region",
+        "europe-west2",
+        "--allow-unauthenticated",  # Adjust access control as needed
+        "--port",
+        "80",
+      ]
+
+# Specify the container image to be built (optional, uncomment if using IMAGE_NAME argument)
+# images:
+#   - gcr.io/your-project/${IMAGE_NAME}  # Replace with desired image name
+
+# Environment variables for secrets (replace with Secret Manager paths)
+# env:
+#   - NPM_TOKEN=${_NPM_TOKEN}  # Reference secret from Secret Manager
+#   - EMAIL=${_EMAIL}          # Reference secret from Secret Manager
